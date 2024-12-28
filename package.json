@@ -1,0 +1,20 @@
+{
+  "name": "webocket-speech-server-v2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon google_transcribe.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@google-cloud/speech": "^6.7.0",
+    "nodemon": "^3.1.9",
+    "protobufjs": "^7.4.0",
+    "wav": "^1.0.2",
+    "ws": "^8.18.0"
+  }
+}

@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+enum AudioEncoding {
+    AUDIO_ENCODING_UNSPECIFIED = 0;
+    LINEAR16 = 1;
+    MULAW = 2;
+}
+
+message StreamCallSessionRequest {
+    oneof audio_request {
+        StreamingConfig streaming_config = 1;
+        AudioContent audio_content = 2;
+        SessionEvent session_event = 3;
+    }
+    string sequence_id = 4;
+}
+
+message StreamingConfig {
+    string profile = 1;
+    AudioMetadata audio_metadata = 2;
+}
+
+message AudioContent {
+    bytes audio_content = 1;
+    Participant participant = 2;
+}
+
+message AudioMetadata {
+    int32 sample_rate_hertz = 1;
+    AudioEncoding encoding = 2;
+}
+
+message Participant {
+    enum Role {
+        ROLE_UNSPECIFIED = 0;
+        AGENT = 1;
+        VISITOR = 2;
+    }
+    Role role = 1;
+    oneof participant_id {
+        string user = 2;
+        string platform_agent_id = 3;
+        string external_user_id = 4;
+    }
+}
+
+message SessionEvent {
+    enum EventType {
+        EVENT_TYPE_UNSPECIFIED = 0;
+        CALL_STARTED = 1;
+        CALL_ENDED = 2;
+    }
+    EventType event_type = 1;
+    string platform_call_id = 2;
+    repeated Participant participants = 3;
+    map<string, string> payload = 4;
+}

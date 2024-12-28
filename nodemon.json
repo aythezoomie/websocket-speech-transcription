@@ -1,0 +1,10 @@
+{
+    "ignore": [
+      "transcriptions.json",
+      "transcription-viewer.html",
+      "*.wav"
+    ],
+    "watch": [
+      "transcribe.js"
+    ]
+  }

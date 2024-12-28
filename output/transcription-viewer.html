@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Live Transcription Viewer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .transcription {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .transcription:hover {
+            background-color: #f9f9f9;
+        }
+        .metadata {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .text {
+            font-size: 1.1em;
+            line-height: 1.4;
+        }
+        .arabic {
+            direction: rtl;
+            font-family: 'Traditional Arabic', 'Arabic Typesetting', 'Arial', sans-serif;
+            font-size: 1.3em;
+        }
+        .auto-refresh {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            font-size: 0.8em;
+        }
+    </style>
+    <script>
+        let isAutoRefresh = true;
+
+        function toggleAutoRefresh() {
+            isAutoRefresh = !isAutoRefresh;
+            document.getElementById('autoRefreshStatus').textContent = 
+                isAutoRefresh ? 'Auto-refresh: ON' : 'Auto-refresh: OFF';
+        }
+
+        function updateTimestamp() {
+            const status = document.getElementById('lastUpdate');
+            status.textContent = 'Last update: ' + new Date().toLocaleTimeString();
+        }
+
+        function refreshContent() {
+            if (!isAutoRefresh) return;
+            
+            const transcriptionsDiv = document.getElementById('transcriptions');
+            const lastTranscription = transcriptionsDiv.lastElementChild;
+            const lastTimestamp = lastTranscription ? 
+                lastTranscription.getAttribute('data-timestamp') : '';
+
+            fetch('transcriptions.json?' + new Date().getTime())
+                .then(response => response.json())
+                .then(data => {
+                    let hasNewContent = false;
+                    // Filter only final transcriptions
+                    const finalTranscriptions = data.filter(t => t.isFinal);
+                    
+                    finalTranscriptions.forEach(transcription => {
+                        const existingElement = document.querySelector(
+                            `[data-id="${transcription.id}"]`
+                        );
+                        
+                        if (!existingElement) {
+                            hasNewContent = true;
+                            const div = document.createElement('div');
+                            div.className = `transcription ${transcription.isArabic ? 'arabic' : ''}`;
+                            div.setAttribute('data-id', transcription.id);
+                            div.setAttribute('data-timestamp', transcription.timestamp);
+                            
+                            div.innerHTML = `
+                                <div class="metadata">
+                                    [${new Date(transcription.timestamp).toLocaleTimeString()}] 
+                                    Speaker ${transcription.speaker}
+                                    ${transcription.languageCode ? ` - ${transcription.languageCode}` : ''}
+                                </div>
+                                <div class="text">${transcription.text}</div>
+                            `;
+                            
+                            transcriptionsDiv.appendChild(div);
+                        }
+                    });
+
+                    if (hasNewContent) {
+                        transcriptionsDiv.scrollTop = transcriptionsDiv.scrollHeight;
+                        updateTimestamp();
+                    }
+                });
+        }
+
+        // Start auto-refresh when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setInterval(refreshContent, 1000);
+            updateTimestamp();
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Live Transcription Viewer</h1>
+            <div class="auto-refresh">
+                <button onclick="toggleAutoRefresh()">Toggle Auto-refresh</button>
+                <span id="autoRefreshStatus">Auto-refresh: ON</span>
+            </div>
+        </div>
+        <div id="transcriptions"></div>
+    </div>
+    <div id="lastUpdate" class="status">Last update: Never</div>
+</body>
+</html>
